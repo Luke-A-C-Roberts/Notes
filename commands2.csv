@@ -1,0 +1,9 @@
+Command,info
+ifconfig,Display network interface information. ifconfig shows the details of all network interfaces.
+ping,Send ICMP echo requests to a host. ping google.com sends ICMP echo requests to “google.com” to check connectivity.
+netstat,Display network connections and statistics. netstat -tuln shows all listening TCP and UDP connections.
+ss,Display network socket information. ss -tuln shows all listening TCP and UDP connections.
+ssh,Securely connect to a remote server. ssh user@hostname initiates an SSH connection to the specified hostname.
+scp,Securely copy files between hosts. scp file.txt user@hostname:/path/to/destination securely copies “file.txt” to the specified remote host.
+wget,Download files from the web. wget http://example.com/file.txt downloads “file.txt” from the specified URL.
+curl,Transfer data to or from a server. curl http://example.com retrieves the content of a webpage from the specified URL.

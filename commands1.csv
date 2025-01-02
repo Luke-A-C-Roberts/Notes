@@ -1,0 +1,36 @@
+Command,info
+ls,List files and directories. -l: Long format listing. -a: Include hidden files hidden ones -h: Human-readable file sizes.
+cd,Change directory.
+pwd,Print current working directory.
+mkdir,Create a new directory.
+rm,Remove files and directories. -r: Remove directories recursively. -f: Force removal without confirmation.
+cp,Copy files and directories. -r: Copy directories recursively.
+mv,Move/rename files and directories.
+touch,Create an empty file or update file timestamps.
+cat,View the contents of a file.
+head,Display the first few lines of a file. -n: Specify the number of lines to display.
+tail,Display the last few lines of a file. -n: Specify the number of lines to display.
+ln,Create links between files. -s: Create symbolic (soft) links.
+find,Search for files and directories. -name: Search by filename. -type: Search by file type.
+chmod,Change file permissions. u: User/owner permissions. g: Group permissions. o: Other permissions. +: Add permissions. –: Remove permissions. =: Set permissions explicitly.
+chown,Change file ownership.
+chgrp,Change group ownership.
+umask,Set default file permissions.
+tar,Create or extract archive files. -c: Create a new archive. -x: Extract files from an archive. -f: Specify the archive file name. -v: Verbose mode. -z: Compress the archive with gzip. -j: Compress the archive with bzip2.
+gzip,Compress files. -d: Decompress files.
+zip,Create compressed zip archives. -r: Recursively include directories.
+ps,Display running processes. -aux: Show all processes.
+top,Monitor system processes in real-time.
+kill,Terminate a process. -9: Forcefully kill a process.
+pkill,Terminate processes based on their name.
+pgrep,List processes based on their name.
+grep,"used to search for specific patterns or regular expressions in text files or streams and display matching lines. -i: Ignore case distinctions while searching. -v: Invert the match, displaying non-matching lines. -r or -R: Recursively search directories for matching patterns. -l: Print only the names of files containing matches. -n: Display line numbers alongside matching lines. -w: Match whole words only, rather than partial matches. -c: Count the number of matching lines instead of displaying them. -e: Specify multiple patterns to search for. -A: Display lines after the matching line. -B: Display lines before the matching line. -C: Display lines both before and after the matching line."
+uname,Print system information. -a: All system information.
+whoami,Display current username.
+df,Show disk space usage. -h: Human-readable sizes.
+du,Estimate file and directory sizes. -h: Human-readable sizes. -s: Display total size only.
+free,Display memory usage information. -h: Human-readable sizes.
+uptime,Show system uptime.
+lscpu,Display CPU information.
+lspci,List PCI devices.
+lsusb,List USB devices.
