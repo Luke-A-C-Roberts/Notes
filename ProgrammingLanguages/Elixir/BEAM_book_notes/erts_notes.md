@@ -321,4 +321,51 @@ Integers that are not fittable in a single word (minus the 4 tag bits) are assig
 
 Refs implements a channel over a process mailbox, they are an 82-bit counter.
 
+# The Erlang virtual machine (BEAM)
 
+BEAM: Bogumil's/Björn's Erlang Abstract Machine
+
+Beam  is the machine that executes code in the Erlang runtime system.
+Key features:
+
+- garbage collecting
+
+- reduction counting
+
+- virtual
+
+- non-preemptive
+
+- directly threaded
+
+- register machine
+
+BEAM is a key component of an Erlang node, because it executes Erlang code. Basic understanding of BEAM is crucial for learning how advanced concepts of the ERTS work such as scheduling and garbage collection.
+
+Before BEAM the erlang virtual machine was *JAM* (Joe's Abstract Machine) which was a *stack machine*, which BEAM is not based on. Instead BEAM is a *register machine* based on *WAM* which was a virtual machine for a Prologue in the 1980s. Stack machines are relatively easy to implement unlike register machines, since the compiler doesn't need to do any register allocations and most instructions don't take any arguments. The code is generated directly from the parse tree.
+
+In a register machine operands are stored in registers instead of the stack and results end up on specific registers. Many register machines don't have a stack at all but BEAM does. Stack slots are accessible through *Y-registers*, which are stored on a stack frame of the caller and only accessible by a calling function. To save a value accross a function call, BEAM allocates a stack slot in the current stack frame. *X-registers* are used as registers for arguments of functions, stored as a C array which is globally accessible. *X0* (aka *R0*) is an accumulator where results are stored after operations, and is mapped to a physical register on the hardware for most architectures.
+
+In addition to the X and Y registers, there are also a group of special purpose registers which are cached versions of PCB fields:
+
+- Htop: The top of the heap
+
+- E:  The top of the stack
+
+- CP: *continuation pointer*, the function call address
+
+- I: Instruction pointer
+
+- fcalls: reduction counter
+
+## Direct threaded code dispatch
+
+The instruction decoder in BEAM is implemented with a technique called *directly threaded code*. The execution path is threaded through the virtual machine. On the machine each instruction is encoded as a "machine word" integer aka bytecode. While it is tempting to do a branching switch statement depending on the instruction code, this becomes expensive, so it is better for an instruction to do a lookup. A simple approach would be to make a list of addresses to instructions encoded as functions, but BEAM uses a GCC extention caled "labels as values", where instead of making a function call list, a `goto` jump list is used instead (this is evil `goto` magic).
+
+## Garbage collection
+
+Erlang source doesn't need explicit memory management instructions, but this is handled explicitly in BEAM code. Such features include stack and heap overrun and allocation.
+
+## Beam as an "abstract machine"
+
+beam is an "abstract machine", a blueprint for a machine which can execute BEAM code. BEAM is a virtual machine but there have been attempts to make it run directly on hardware such as BEAM by  FPGA. Abstract machine refers to a theoretical model of a computer and a virtual machine is an implementation of an abstract machine on hardware. There is no formal definition of BEAM, the only reference available is the implementation of Erlang/OTP.
