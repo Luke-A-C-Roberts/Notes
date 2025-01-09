@@ -50,7 +50,7 @@ The linter generates warnings for syntactically correct but otherwise bad code.
 
 ## Save AST
 
-At this stage the AST can be saved if compiled in debug mode. The AST is saved before any optimisation, so their may be a difference between how the program runs in debug/release modes. Custom compier optimisations **can cause problems** for this.
+At this stage the AST can be saved if compiled in debug mode. The AST is saved before any optimisation, so their may be a difference between how the program runs in debug/release modes. Custom compiler optimisations **can cause problems** for this.
 
 ## Expand
 
@@ -369,3 +369,87 @@ Erlang source doesn't need explicit memory management instructions, but this is 
 ## Beam as an "abstract machine"
 
 beam is an "abstract machine", a blueprint for a machine which can execute BEAM code. BEAM is a virtual machine but there have been attempts to make it run directly on hardware such as BEAM by  FPGA. Abstract machine refers to a theoretical model of a computer and a virtual machine is an implementation of an abstract machine on hardware. There is no formal definition of BEAM, the only reference available is the implementation of Erlang/OTP.
+
+# BEAM File Format
+
+BEAM files encode erlang functions into a single file and makes it possible to use them in another module. *Code loading* is loading theses compiled modules into the BEAM virtual machine, either statically or dynamically. 
+
+Dynamic code loading supports hot code loading allowing code to be upgraded as it is running, a great feature which allows services built on erlang to have amazing uptimes (amongst other reasons). When a module is updated, the old version stays in memory until no process executes it, where it will then be purged from the running system's memory. This can even be done across multiple nodes accross the distributed system but requres good coordination to be achieved correctly. `code:load_file(Module).` is used to dynammically load a module in erlang.
+
+The *code server* is the part of BEAM responsoble for managing loaded modules and their code.
+
+A definition of the BEAM file format is found in [beam_lib.erl](https://github.com/erlang/otp/blob/maint/lib/stdlib/src/beam_lib.erl). It is bases on the *interchange file format* (EA IFF), which is structured with a header followed by chunks containing data. BEAM files differ from standard IFF files in that each chunk is aligned accross a 4 byte-boundary (the standard is 2 bytes). The `"FOR1"` tag instead of `"FOR"` indicates this difference. Memory alignment is important for platforms where unaligned byte access creats hardware exceptions (e.g. `SIGBUS`), which could be a huge performance hit or crash the VM.
+
+The header of a beam file is `"BEAM"`, with the following layout:
+
+```erlang
+BEAMHeader = <<
+  IffHeader:4/unit:8 = "FOR1",
+  Size:32/big,                  // big endian, how many more bytes are there
+  FormType:4/unit:8 = "BEAM"
+>>
+```
+
+The size of an individual chunk is described in the folloing code:
+
+```erlang
+BEAMChunk = <<
+  ChunkName:4/unit:8,           // "Code", "Atom", "StrT", "LitT", ...
+  ChunkSize:32/big,
+  ChunkData:ChunkSize/unit:8,   // data format is defined by ChunkName
+  Padding4:0..3/unit:8
+>>
+```
+
+The chunk prepends all chunks so that it is easy to parse the file when reading a module in.
+
+`ChunkName` determines what kind of data is being encoded.
+
+## Atoms
+
+Atoms are encoded with either the chunk names `"Atom"` (latin-1 encoding) or `"AtU8"` (utf8 encoding). The atoms chunk contains all atom names to load for a particular module, which can be found in an array in the Atom chunk.
+
+## Exported function
+
+All exported functions are stored in the EXPort table, indicated by `"ExpT"`. Every function with public access is located in the chunk.
+
+## Code
+
+The actual BEAM assembly code is located in the code chunk encoded by the `"Code"` label. Additional metadata is provided by tags:
+
+- `"Subsize"`: the number of words before the code starts. Helps addition of new information without breaking the loaded.
+
+- `"InstructionSet"`: states the version of the instruction set the file uses.
+
+- `"OpcodeMax"`: filed indicates the highest number of any opcode used by the code. If new instructions are added, old loaders won't break because of an opcode remapping.
+
+- `"LabelCount"`: contains the number of labels for preallocation of the label table in one call.
+
+- `"FunctionCount"`: the number of functions contained in the functions table for effictient preallocation.
+
+- `"Code"`: the field that contains the actual instructions all chained together.
+
+```erlang
+Instruction = <<
+  InstructionCode:8,
+  [beam_asm:encode(Argument) || repeat Arity]
+>>
+```
+
+## Strings
+
+The table indicated by `"StrT"` encodes the string table used by the program, containing all string literals as one long string. Even if there are no strings the chunk should exist but encoded with `"ChunkSize"` equal to 0.
+
+## Literals
+
+All literal values are found in the `"LitT"`. All literals are encoded with the *External Term Format*, which is converted using `erlang:term_to_binary(Term).`.
+
+## Chunks for tooling
+
+Attributes
+
+Compilation Information
+
+Local Functions
+
+Abstract Code Chunk
